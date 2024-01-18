@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Acme Guest List with Router</title>
+    <link rel='stylesheet' href='style.css' />
+  </head>
+<body>
+  <div id="root"></div>
+</body>
+<!-- This setup is not suitable for production. -->
+<!-- Only use it in development! -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script async src="https://ga.jspm.io/npm:es-module-shims@1.7.0/dist/es-module-shims.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react?dev",
+    "react-dom/client": "https://esm.sh/react-dom/client?dev",
+    "react-router-dom": "https://esm.sh/react-router-dom?dev"
+  }
+}
+</script>
+<script type="text/babel" data-type="module">
+  import React from 'react';
+import {
+  HashRouter,
+  Link,
+  useLocation,
+  Routes,
+  Route,
+  useParams,
+  useNavigate
+} from 'react-router-dom';
+import { createRoot } from 'react-dom/client';
+
+const Home = ()=> <p>The Acme Guest App</p>;
+
+const Guest = ({ guests })=> {
+  const { id } = useParams();
+  const guest = guests.find(guest => guest.id === id*1)
+  if(!guest){
+    return null;
+  }
+
+return(
+  <div>
+    <h2>Guest Detail</h2>
+    <h3>{ guest.name } @ { guest.email } @ {guest.phone}</h3>
+    <Link to="/guests"> All Guests</Link>
+  </div>
+  );
+};
+
+const CreateGuest = ({ createGuest })=> {
+  const [name, setName ] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+
+  const submit = (ev)=> {
+    ev.preventDefault();
+    createGuest({
+      name,
+      phone,
+      email
+    });
+    createGuest(guest);
+  };
+
+  return (
+    <form onSubmit={ submit }>
+      <input
+        placeholder='name'
+        value={ name }
+        onChange={ (ev)=> setName(ev.target.value ) }
+      />
+      <input
+        placeholder='email'
+        value={ email }
+        onChange={ (ev)=> setEmail(ev.target.value ) }
+      />
+      <input
+        placeholder='phone'
+        value={ phone }
+        onChange={ (ev)=> setPhone(ev.target.value ) }
+      />
+      <button>Create</button>
+    </form>
+  );
+};
+
+const Guests = ({ guests, destroyGuest })=> {
+  return (
+    <ul>
+      {
+        guests.map((guest) => {
+          return (
+            <li key={ guest.id }>
+              <Link to={`/guests/${guest.id}`}>{guest.name}</Link>
+              <button onClick={()=> destroyGuest(guest)}>delete</button>
+            </li>
+          );
+        })
+      }
+    </ul>
+  );
+};
+
+function App() {
+  const [guests, setGuests] = React.useState([]);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  React.useEffect(()=> {
+    const fetchData = async()=> {
+      const response = await fetch('https://fsa-crud-2aa9294fe819.herokuapp.com/api/2309_ftb_et_web_am/guests');
+      const json = await response.json();
+      setGuests(json.data);
+     
+    };
+    fetchData();
+  }, []);
+
+  const createGuest = async(guest)=> {
+    const response = await fetch(BASE_URL, {
+      method: 'POST',
+      body: JSON.stringify(guest),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const json = await response.json();
+    setGuests([...guests, json.data]);
+    navigate(`/guests/${json.data.id}`);
+  };
+ 
+
+  const destroyGuest = async(guest)=> {
+    const response = await fetch(
+      `https://fsa-crud-2aa9294fe819.herokuapp.com/api/2309_ftb_et_web_am/guests/${guest.id}`, {
+      method: 'DELETE'
+    });
+    setGuests(guests.filter((_guest)=>{
+      return _guest.id !== guest.id;
+    }));
+  };
+  
+  return (
+    <div>
+      <h1>Acme Guest List with Router ({ guests.length })</h1>
+      <nav>
+        <Link to='/' className={ pathname === '/' ? 'selected': ''}>Home</Link>
+        <Link to='/guests' className={ pathname === '/guests' ? 'selected': ''}>Guests ({ guests.length })</Link>
+        <Link to='/createGuest' className={ pathname === '/createGuest' ? 'selected': ''}>Create Guest</Link>
+      </nav>
+      <Routes>
+        <Route
+          path='/'
+          element = { <Home /> }
+        />
+        <Route
+          path='/createGuest'
+          element={ <CreateGuest createGuest={ createGuest }/> } 
+        />
+        <Route
+          path='/guests'
+          element={ <Guests guests={ guests } destroyGuest={ destroyGuest }/> } 
+        />
+        <Route
+          path='/guest/:id'
+          element={ <Guest guests={ guests } /> }
+        />
+      </Routes>
+    </div>
+  );
+}
+
+
+const root = createRoot(document.getElementById('root'));
+root.render(
+  <HashRouter>
+  <App />
+  </HashRouter>
+);
+</script>
+</html>

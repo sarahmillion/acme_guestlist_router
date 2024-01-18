@@ -1,0 +1,44 @@
+body{
+    font-family: verdana;
+}
+
+h1{
+    color: rgb(48, 48, 150);
+}
+
+p{
+    font-size:xx-large;
+    font-family: verdana;
+    color: rgb(98, 98, 180);
+   }
+
+form{
+    background-color:lightgrey;
+    display:flex;
+    flex-direction: column;
+    border: solid 2px rgb(48, 48, 150);
+}
+
+form > *{
+    margin: 0.5rem;
+}
+
+input, button{
+    height: 2rem;
+}
+
+nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: rgb(48, 48, 150);
+    padding: 0.5rem;
+  }
+  
+  nav a {
+    color: white;
+  }
+  
+  nav a.selected {
+    font-size: 1.5rem;
+  }
